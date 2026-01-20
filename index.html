@@ -1116,7 +1116,6 @@ document.getElementById("rsvpForm").addEventListener("submit", function(e) {
     // POST ke Google Sheet
     fetch(webAppURL, {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
             guestName,
