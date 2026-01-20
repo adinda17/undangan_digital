@@ -1068,15 +1068,16 @@ background: rgba(255, 255, 255, 0.7); /* TRANSPARAN */
     
     // RSVP Form
   // Ganti ini dengan URL Web App dari Google Apps Script
-const webAppURL = "https://script.google.com/macros/s/AKfycbzT6IhL9M3uEtW4vNinugzqhAlJc4ahiBAEF9idbj4NIMp2EgWB7GJZIlRBYiqHBEAm/exec"; // ganti dengan URL deploy web app kamu
+const webAppURL = "https://script.google.com/macros/s/AKfycbx2GgQOdtS0vovCI4rneW8mB4pZtBY4M7Wl6ITLar9NTtP44Ah1KsMWOWk8p1KY1hh1/exec";
 
-// Load komentar saat halaman dimuat
+
+// Load semua komentar sebelumnya saat halaman dimuat
 window.addEventListener("DOMContentLoaded", () => {
   fetch(webAppURL)
-    .then(res => res.json()) // sekarang JSON murni, aman
+    .then(res => res.json())
     .then(data => {
       const previewContainer = document.getElementById("messagesDisplay");
-      previewContainer.innerHTML = "";
+      previewContainer.innerHTML = ""; // kosongkan dulu
 
       data.forEach(entry => {
         previewContainer.innerHTML += `
@@ -1092,54 +1093,74 @@ window.addEventListener("DOMContentLoaded", () => {
     .catch(err => console.error(err));
 });
 
+
+
+
 // Submit Form
 document.getElementById("rsvpForm").addEventListener("submit", function(e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  const submitText = document.getElementById("submitText");
-  const submitSpinner = document.getElementById("submitSpinner");
-  const formFeedback = document.getElementById("formFeedback");
+    const submitBtn = document.getElementById("submitRsvp");
+    const submitText = document.getElementById("submitText");
+    const submitSpinner = document.getElementById("submitSpinner");
+    const formFeedback = document.getElementById("formFeedback");
 
-  const guestName = document.getElementById("guestName").value;
-  const attendance = document.getElementById("attendance").value;
-  const guestCount = document.getElementById("guestCount").value;
-  const wishMessage = document.getElementById("wishMessage").value;
+    const guestName = document.getElementById("guestName").value;
+    const attendance = document.getElementById("attendance").value;
+    const guestCount = document.getElementById("guestCount").value;
+    const wishMessage = document.getElementById("wishMessage").value;
 
-  submitText.classList.add("hidden");
-  submitSpinner.classList.remove("hidden");
+    // Tampilkan spinner
+    submitText.classList.add("hidden");
+    submitSpinner.classList.remove("hidden");
 
-  fetch(webAppURL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ guestName, attendance, guestCount, wishMessage })
-  })
-  .then(res => res.json()) // sekarang aman karena backend pakai ContentService JSON
-  .then(data => {
-    const previewContainer = document.getElementById("messagesDisplay");
-    previewContainer.innerHTML += `
-      <div class="message-bubble p-6 bg-[#fffaf0] rounded-2xl shadow-md">
-        <p><strong>Nama:</strong> ${guestName}</p>
-        <p><strong>Kehadiran:</strong> ${attendance}</p>
-        <p><strong>Jumlah Tamu:</strong> ${guestCount}</p>
-        <p><strong>Pesan:</strong> ${wishMessage}</p>
-      </div>
-    `;
-    document.getElementById("rsvpForm").reset();
-    formFeedback.textContent = "✅ Terima kasih, konfirmasi Anda berhasil dikirim!";
-    formFeedback.classList.remove("hidden", "text-red-500");
-    formFeedback.classList.add("text-green-600");
-  })
-  .catch(err => {
-    console.error(err);
-    formFeedback.textContent = "⚠️ Terjadi kesalahan, silakan coba lagi.";
-    formFeedback.classList.remove("hidden", "text-green-600");
-    formFeedback.classList.add("text-red-500");
-  })
-  .finally(() => {
-    submitText.classList.remove("hidden");
-    submitSpinner.classList.add("hidden");
-  });
+    // POST ke Google Sheet
+    fetch(webAppURL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+            guestName,
+            attendance,
+            guestCount,
+            wishMessage
+        })
+    })
+    .then(() => {
+        // Update preview langsung setelah submit
+const previewContainer = document.getElementById("messagesDisplay");
+previewContainer.innerHTML += `
+  <div class="message-bubble p-6 bg-[#fffaf0] rounded-2xl shadow-md">
+    <p class="text-forest"><strong>Nama:</strong> ${guestName}</p>
+    <p class="text-forest"><strong>Kehadiran:</strong> ${attendance}</p>
+    <p class="text-forest"><strong>Jumlah Tamu:</strong> ${guestCount}</p>
+    <p class="text-forest"><strong>Pesan:</strong> ${wishMessage}</p>
+  </div>
+`;
+
+
+
+        // Reset form
+        document.getElementById("rsvpForm").reset();
+
+        // Feedback sukses
+        formFeedback.textContent = "✅ Terima kasih, konfirmasi Anda berhasil dikirim!";
+        formFeedback.classList.remove("hidden", "text-red-500");
+        formFeedback.classList.add("text-green-600");
+
+    })
+    .catch(err => {
+        console.error(err);
+        formFeedback.textContent = "⚠️ Terjadi kesalahan, silakan coba lagi.";
+        formFeedback.classList.remove("hidden", "text-green-600");
+        formFeedback.classList.add("text-red-500");
+    })
+    .finally(() => {
+        submitText.classList.remove("hidden");
+        submitSpinner.classList.add("hidden");
+    });
 });
+
 
 
     
