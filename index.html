@@ -821,7 +821,7 @@ background: rgba(255, 255, 255, 0.7); /* TRANSPARAN */
          <div class="text-7xl mb-6">
           🌿
          </div>
-         <p class="font-semibold text-lg text-forest">Jadilah yang pertama berbagi ucapan!</p>
+    
         </div>
        </div>
        <div id="messageStats" class="mt-8 pt-6 border-t-2 text-center font-bold text-lg text-forest" style="border-color: rgba(110, 127, 90, 0.2);"></div>
@@ -1067,24 +1067,100 @@ background: rgba(255, 255, 255, 0.7); /* TRANSPARAN */
     }
     
     // RSVP Form
-        document.getElementById("rsvpForm").addEventListener("submit", function(e) {
-        e.preventDefault();
-        const guestName = document.getElementById("guestName").value;
-        const attendance = document.getElementById("attendance").value;
-        const guestCount = document.getElementById("guestCount").value;
-        const wishMessage = document.getElementById("wishMessage").value;
+  // Ganti ini dengan URL Web App dari Google Apps Script
+const webAppURL = "https://script.google.com/macros/s/AKfycbzejKYsJWME5SaLjTGju3SPtH6jUfiemesm56j7oAb67ywJ-lDBcJCVTFz8pf-9tE9y/exec";
 
-        // Update bagian preview
-        const previewContainer = document.getElementById("messagesDisplay");
+// Load semua komentar sebelumnya saat halaman dimuat
+window.addEventListener("DOMContentLoaded", () => {
+  fetch(webAppURL)
+    .then(res => res.json())
+    .then(data => {
+      const previewContainer = document.getElementById("messagesDisplay");
+      previewContainer.innerHTML = ""; // kosongkan dulu
+
+      data.forEach(entry => {
         previewContainer.innerHTML += `
-            <div class="message-bubble p-6">
-            <p><strong>Nama:</strong> ${guestName}</p>
-            <p><strong>Kehadiran:</strong> ${attendance}</p>
-            <p><strong>Jumlah Tamu:</strong> ${guestCount}</p>
-            <p><strong>Pesan:</strong> ${wishMessage}</p>
-            </div>
+          <div class="message-bubble p-6 bg-[#fef6e4] rounded-2xl shadow-md">
+            <p><strong>Nama:</strong> ${entry.guestName}</p>
+            <p><strong>Kehadiran:</strong> ${entry.attendance}</p>
+            <p><strong>Jumlah Tamu:</strong> ${entry.guestCount}</p>
+            <p><strong>Pesan:</strong> ${entry.wishMessage}</p>
+          </div>
         `;
-        });
+      });
+    })
+    .catch(err => console.error(err));
+});
+
+
+
+
+// Submit Form
+document.getElementById("rsvpForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById("submitRsvp");
+    const submitText = document.getElementById("submitText");
+    const submitSpinner = document.getElementById("submitSpinner");
+    const formFeedback = document.getElementById("formFeedback");
+
+    const guestName = document.getElementById("guestName").value;
+    const attendance = document.getElementById("attendance").value;
+    const guestCount = document.getElementById("guestCount").value;
+    const wishMessage = document.getElementById("wishMessage").value;
+
+    // Tampilkan spinner
+    submitText.classList.add("hidden");
+    submitSpinner.classList.remove("hidden");
+
+    // POST ke Google Sheet
+    fetch(webAppURL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+            guestName,
+            attendance,
+            guestCount,
+            wishMessage
+        })
+    })
+    .then(() => {
+        // Update preview langsung setelah submit
+const previewContainer = document.getElementById("messagesDisplay");
+previewContainer.innerHTML += `
+  <div class="message-bubble p-6 bg-[#fffaf0] rounded-2xl shadow-md">
+    <p class="text-forest"><strong>Nama:</strong> ${guestName}</p>
+    <p class="text-forest"><strong>Kehadiran:</strong> ${attendance}</p>
+    <p class="text-forest"><strong>Jumlah Tamu:</strong> ${guestCount}</p>
+    <p class="text-forest"><strong>Pesan:</strong> ${wishMessage}</p>
+  </div>
+`;
+
+
+
+        // Reset form
+        document.getElementById("rsvpForm").reset();
+
+        // Feedback sukses
+        formFeedback.textContent = "✅ Terima kasih, konfirmasi Anda berhasil dikirim!";
+        formFeedback.classList.remove("hidden", "text-red-500");
+        formFeedback.classList.add("text-green-600");
+
+    })
+    .catch(err => {
+        console.error(err);
+        formFeedback.textContent = "⚠️ Terjadi kesalahan, silakan coba lagi.";
+        formFeedback.classList.remove("hidden", "text-green-600");
+        formFeedback.classList.add("text-red-500");
+    })
+    .finally(() => {
+        submitText.classList.remove("hidden");
+        submitSpinner.classList.add("hidden");
+    });
+});
+
+
 
     
     // Copy Account
