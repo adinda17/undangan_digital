@@ -1068,13 +1068,14 @@ background: rgba(255, 255, 255, 0.7); /* TRANSPARAN */
     
     // RSVP Form
   // Ganti ini dengan URL Web App dari Google Apps Script
-const webAppURL = "https://script.google.com/macros/s/AKfycbwPPDrl-EsfKihmt2_aTSeUtQlKhHfbZrO4Ruc5aoCGEP-pAbiKE99lscxhn9NHI1hV/exec";
+const webAppURL = "https://script.google.com/macros/s/AKfycbyL7DRVmzEBqsLucDyXcyFPnuQKyLvqafZXVmK4x8FW_Yn1pM3ZjfK3obntLnRo-MAL/exec";
 
 // Load semua komentar sebelumnya saat halaman dimuat
 window.addEventListener("DOMContentLoaded", () => {
   fetch(webAppURL)
-    .then(res => res.json())
-    .then(data => {
+  .then(res => res.text())
+  .then(text => {
+      const data = JSON.parse(text);
       const previewContainer = document.getElementById("messagesDisplay");
       previewContainer.innerHTML = ""; // kosongkan dulu
 
@@ -1088,8 +1089,9 @@ window.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
       });
-    })
-    .catch(err => console.error(err));
+  })
+  .catch(err => console.error(err));
+
 });
 
 
@@ -1115,48 +1117,47 @@ document.getElementById("rsvpForm").addEventListener("submit", function(e) {
 
     // POST ke Google Sheet
     fetch(webAppURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-            guestName,
-            attendance,
-            guestCount,
-            wishMessage
-        })
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+        guestName,
+        attendance,
+        guestCount,
+        wishMessage
     })
-    .then(() => {
-        // Update preview langsung setelah submit
-const previewContainer = document.getElementById("messagesDisplay");
-previewContainer.innerHTML += `
-  <div class="message-bubble p-6 bg-[#fffaf0] rounded-2xl shadow-md">
-    <p class="text-forest"><strong>Nama:</strong> ${guestName}</p>
-    <p class="text-forest"><strong>Kehadiran:</strong> ${attendance}</p>
-    <p class="text-forest"><strong>Jumlah Tamu:</strong> ${guestCount}</p>
-    <p class="text-forest"><strong>Pesan:</strong> ${wishMessage}</p>
-  </div>
-`;
+})
+.then(res => res.text())  // ambil response sebagai teks
+.then(text => {
+    const data = JSON.parse(text); // konversi ke objek
+    console.log(data); // { result: "success" }
 
+    // Update preview
+    const previewContainer = document.getElementById("messagesDisplay");
+    previewContainer.innerHTML += `
+      <div class="message-bubble p-6 bg-[#fffaf0] rounded-2xl shadow-md">
+        <p class="text-forest"><strong>Nama:</strong> ${guestName}</p>
+        <p class="text-forest"><strong>Kehadiran:</strong> ${attendance}</p>
+        <p class="text-forest"><strong>Jumlah Tamu:</strong> ${guestCount}</p>
+        <p class="text-forest"><strong>Pesan:</strong> ${wishMessage}</p>
+      </div>
+    `;
 
+    document.getElementById("rsvpForm").reset();
+    formFeedback.textContent = "✅ Terima kasih, konfirmasi Anda berhasil dikirim!";
+    formFeedback.classList.remove("hidden", "text-red-500");
+    formFeedback.classList.add("text-green-600");
+})
+.catch(err => {
+    console.error(err);
+    formFeedback.textContent = "⚠️ Terjadi kesalahan, silakan coba lagi.";
+    formFeedback.classList.remove("hidden", "text-green-600");
+    formFeedback.classList.add("text-red-500");
+})
+.finally(() => {
+    submitText.classList.remove("hidden");
+    submitSpinner.classList.add("hidden");
+});
 
-        // Reset form
-        document.getElementById("rsvpForm").reset();
-
-        // Feedback sukses
-        formFeedback.textContent = "✅ Terima kasih, konfirmasi Anda berhasil dikirim!";
-        formFeedback.classList.remove("hidden", "text-red-500");
-        formFeedback.classList.add("text-green-600");
-
-    })
-    .catch(err => {
-        console.error(err);
-        formFeedback.textContent = "⚠️ Terjadi kesalahan, silakan coba lagi.";
-        formFeedback.classList.remove("hidden", "text-green-600");
-        formFeedback.classList.add("text-red-500");
-    })
-    .finally(() => {
-        submitText.classList.remove("hidden");
-        submitSpinner.classList.add("hidden");
-    });
 });
 
 
